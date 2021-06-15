@@ -148,7 +148,7 @@ jobs:
       - name: Hydrate UI with Parameters
         run: |
           cd myreactapp/build;
-          find . -type f -exec grep -Iq . {} \; -exec sed -i 's/BUILD_NAME_PH/Harshit/g' {} +
+          find . -type f -exec grep -Iq . {} \; -exec sed -i 's/BUILD_NAME_PH/${{secrets.NAME}}/g' {} +
           find . -type f -exec grep -Iq . {} \; -exec sed -i 's/BUILD_STAGE_PH/dev/g' {} +
           cd ../../
       - name: AWS Deploy to dev
