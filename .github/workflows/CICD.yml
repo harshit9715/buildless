@@ -80,8 +80,10 @@ jobs:
         if: steps.node_cache_cdk.outputs.cache-hit != 'true'
         run: npm ci;
 
-      - name: CDK Synth
-        run: npx cdk synth
+      - name: CDK Diff PR run
+        id: cdk-diff-step
+        run: |
+          echo "::set-output name=cdk-diff::$(npx cdk diff)\n"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -91,6 +93,29 @@ jobs:
           DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
           MESSAGE_STRING: ${{ secrets.MESSAGE_STRING }}
           CREATE_ROUTE53_HOSTED_ZONE: ${{ secrets.CREATE_ROUTE53_HOSTED_ZONE }}
+          
+
+      - name: Comment on PR
+        run: |
+          echo ${{join(steps.cdk-diff-step.outputs.*, '\n')}}
+#         if: always() && github.event_name == 'pull_request'
+#         run: |
+#           commentWrapper="#### \`cdk diff` ${{ job.status }} \
+#           <details><summary>Show Output</summary> \
+#           \`\`\`
+#           ${{join(steps.cdk-diff-step.outputs.*, '\n')}}
+#           \`\`\`
+#           </details>
+#           *Workflow: \`${GITHUB_WORKFLOW}\`, Action: \`${GITHUB_ACTION}\`, Working Directory: \`${INPUT_WORKING_DIR}\`*"
+
+#               payload=$(echo "${commentWrapper}" | jq -R --slurp '{body: .}')
+#               commentsURL=$(cat ${GITHUB_EVENT_PATH} | jq -r .pull_request.comments_url)
+
+#               echo "${payload}" | curl -s -S -H "Authorization: token ${GITHUB_TOKEN}" --header "Content-Type: application/json" --data @- "${commentsURL}" > /dev/null
+#             fi
+#           }
+  
+
 
   DeployDev:
     name: Deploy to Dev 
